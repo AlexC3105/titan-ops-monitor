@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route, Link } from 'react-router-dom'
 import { AppShell } from '@/layouts/AppShell'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
@@ -8,8 +9,12 @@ import { DataSourcesPage } from '@/features/data-sources/DataSourcesPage'
 import { ReportsPage } from '@/features/reports/ReportsPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
 import { AboutPage } from '@/features/about/AboutPage'
+import { startFeeds } from '@/services/feeds/runtime'
 
 export function App() {
+  // One scheduler keeps every live feed refreshed for the whole app.
+  useEffect(() => startFeeds(), [])
+
   return (
     <Routes>
       <Route element={<AppShell />}>

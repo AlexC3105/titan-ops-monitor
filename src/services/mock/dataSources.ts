@@ -5,7 +5,7 @@ import type { DataSource } from '@/types'
 export const DATA_SOURCES: DataSource[] = [
   { id: 'nws', name: 'NWS / NOAA', category: 'environment', status: 'live', cadence: 'hourly', provider: 'weather.gov', notes: 'Live: current conditions via points→forecast. Falls back to mock on error.' },
   { id: 'nws-alerts', name: 'NWS Alerts', category: 'events', status: 'live', cadence: 'realtime', provider: 'weather.gov', notes: 'Live active advisories by area. Mock fallback on error.' },
-  { id: 'nhc', name: 'National Hurricane Center', category: 'environment', status: 'planned', cadence: 'hourly', provider: 'nhc.noaa.gov', notes: 'Storm tracks / cones for hurricane scenarios.' },
+  { id: 'nhc', name: 'National Hurricane Center', category: 'environment', status: 'live', cadence: 'hourly', provider: 'nhc.noaa.gov', notes: 'Active tropical systems plus official forecast track and cone, via the TITAN API Worker.' },
   { id: 'openweather', name: 'OpenWeather', category: 'environment', status: 'inactive', cadence: 'minutes', provider: 'openweathermap.org', notes: 'Requires API key.' },
   { id: 'tomtom', name: 'TomTom Traffic', category: 'transport', status: 'inactive', cadence: 'minutes', provider: 'developer.tomtom.com', notes: 'Requires API key.' },
   { id: 'opensky', name: 'OpenSky Network', category: 'transport', status: 'live', cadence: 'realtime', provider: 'opensky-network.org', notes: 'Live flight positions by bbox (rate limited). Mock fallback.' },

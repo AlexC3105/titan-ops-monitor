@@ -25,7 +25,8 @@ _Screenshots and a live demo link will be added with the first public deployment
 | State | Region, layers, map mode and the last 50 scenario results persist in `localStorage` |
 | Scenarios | 7 event types; deterministic heuristic outputs with confidence levels, drivers and explicit data gaps |
 | API Worker | Cloudflare Worker (`worker/`) with fixed routes: `GET /v1/storms` (live NOAA / NHC active storms), `GET /v1/storms/<id>/geometry` (official NHC forecast track + cone, converted server-side from NHC's shapefile archive to GeoJSON) and `GET /v1/flights?region=<id>` (allowlisted regions only). Fixed upstreams, request validation, CORS allowlist, upstream timeout, structured JSON errors, success-only caching verified in production |
-| Quality | 154 Vitest tests (75 app, 79 Worker) on recorded, sanitised fixtures; CI runs typecheck, tests and build for both |
+| Feed health | One scheduler refreshes each live feed on its own cadence with bounded exponential backoff, pauses while the tab is hidden or the browser is offline, and keeps the last live data (marked stale) during outages. A Feed Health panel and the Data Sources page show live / mock status, health (healthy · refreshing · degraded · stale · unavailable · paused), last live data, last attempt, latency, and manual refresh |
+| Quality | 184 Vitest tests (105 app, 79 Worker) on recorded, sanitised fixtures; CI runs typecheck, tests and build for both |
 
 ## Data sources
 
@@ -43,10 +44,10 @@ Full catalog, including planned sources: [docs/data-sources.md](docs/data-source
 
 ```
 UI routes (src/features/*)
-   │  read hooks + Zustand stores
+   │  read hooks + Zustand stores (data + feed health)
    ▼
-hooks (useWeather, useAlerts, useFlights)
-   │  call adapters on region change
+feed scheduler (src/services/feeds/*)
+   │  per-feed intervals, backoff, pauses when hidden/offline
    ▼
 adapters (src/services/adapters/*)
    ├──► NWS forecast + alerts            (direct, browser-safe CORS)
@@ -119,9 +120,7 @@ and status labelling. Scenario tests check determinism, bounds and framing — n
   provider access is arranged. Local development still gets live OpenSky data.
 - **Basemap needs a CARTO key.** Without `VITE_CARTO_BASEMAP_KEY` the map shows a plain background
   (see "Basemap key").
-- **Storm list is fetched once per page load** (no auto-refresh yet).
 - **Florida only.** Regions and NWS area codes are currently Florida-specific.
-- **No auto-refresh yet.** Feeds are fetched when the region changes.
 - **Scenario numbers are illustrative.** Templates and weights are hand-set and uncalibrated.
 - **Sample data.** Infrastructure markers and layer catalog are static.
 

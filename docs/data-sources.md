@@ -52,3 +52,10 @@ Every source is **mock-first**. A source is integrated only when a real adapter 
 4. **No personal data.** Population and social signals are aggregate/group-level only
    (see [ethics.md](./ethics.md)).
 5. **Degrade gracefully.** `inactive`/`planned` sources render a placeholder, never a crash.
+
+## Refresh cadence
+
+Live feeds are refreshed automatically by the app's feed scheduler: NWS forecast every 15 min,
+NWS alerts every 3 min, NHC tropical systems every 5 min, flights every 30 s (only while the
+Flights layer is on). Failures back off exponentially to at most 30 min, and data is marked stale
+after 3 missed intervals. Details: [architecture.md → Feed scheduling and health](./architecture.md#feed-scheduling-and-health).

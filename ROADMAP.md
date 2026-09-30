@@ -34,6 +34,10 @@ This file separates what exists today from what is planned. Anything not listed 
 - CARTO Dark Matter basemap via one browser key (`VITE_CARTO_BASEMAP_KEY`) for both renderers:
   raster tiles (compatibility) and the vector style (MapLibre); clear notice and no tile requests
   when no key is set.
+- Feed health and auto-refresh: one scheduler (`src/services/feeds/`) with per-feed intervals,
+  bounded exponential backoff, pause while hidden / offline with staggered catch-up, manual
+  refresh, and retention of the last live data during outages; Feed Health panel (Dashboard) and
+  runtime health on the Data Sources page. No third-party telemetry.
 - Installable PWA (manifest + Workbox app-shell service worker).
 - Settings and scenario history persisted to `localStorage`.
 - Heuristic scenario engine: 7 event types, deterministic output, confidence levels and explicit
@@ -51,13 +55,15 @@ This file separates what exists today from what is planned. Anything not listed 
   none currently serves shared cloud origins (timeout, rate limit, access-by-request). The Worker
   returns structured errors and the app shows labelled mock flights.
 
+## Pending verification
+
+- **T3.2-P1** — verify the compatibility (raster) renderer over real CARTO tiles with a CARTO
+  development key. The code path is implemented; only the real-key visual check is outstanding.
+
 ## Planned (next)
 
 - Arrange production access with a flight-data provider (allowlisting or an issued key), then
   enable live flights through the existing Worker.
-- Feed-health panel and auto-refresh (including the storm list).
-- Feed-health panel: real fetch time, latency, live / mock / stale status per feed.
-- Auto-refresh with per-feed intervals and backoff.
 - Public deployment (Cloudflare Pages) with measured Lighthouse and bundle-size results.
 
 ## Later (not committed)

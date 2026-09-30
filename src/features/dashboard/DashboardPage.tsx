@@ -10,16 +10,9 @@ import { LAYERS } from '@/services/mock/layers'
 import { REGIONS } from '@/services/mock/regions'
 import { DATA_SOURCES } from '@/services/mock/dataSources'
 import { AlertsPanel } from '@/components/AlertsPanel'
+import { FeedHealthPanel } from '@/components/FeedHealthPanel'
 import { compactNumber } from '@/utils/format'
 
-const SYSTEM_STATUS = [
-  { id: 'ingest', label: 'Data ingestion', status: 'ok', detail: '10 sources · mock' },
-  { id: 'scenario', label: 'Scenario engine', status: 'ok', detail: 'heuristic v0' },
-  { id: 'prediction', label: 'Prediction engine', status: 'offline', detail: 'Phase 4' },
-  { id: 'sim', label: 'Simulation engine', status: 'offline', detail: 'Phase 4+' },
-] as const
-
-const DOT = { ok: 'bg-confidence-high', degraded: 'bg-confidence-medium', offline: 'bg-slate-500' }
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -47,7 +40,7 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Active region" value={region.name.split(',')[0]} sub={`pop. ${compactNumber(region.population)}`} />
-        <Stat label="Active layers" value={`${activeLayers.length}/${LAYERS.length}`} sub="mock feeds" />
+        <Stat label="Active layers" value={`${activeLayers.length}/${LAYERS.length}`} sub="map layers" />
         <Stat label="Scenarios run" value={String(useScenarioStore.getState().results.length)} sub="this device" />
         <Stat label="Data sources" value={String(DATA_SOURCES.length)} sub={`${liveSources} live`} />
       </div>
@@ -66,19 +59,7 @@ export function DashboardPage() {
           <RegionMap className="h-72" />
         </Panel>
 
-        <Panel title="System status">
-          <ul className="space-y-3">
-            {SYSTEM_STATUS.map((s) => (
-              <li key={s.id} className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 text-slate-300">
-                  <span className={`h-2 w-2 rounded-full ${DOT[s.status]}`} />
-                  {s.label}
-                </span>
-                <span className="text-xs text-slate-500">{s.detail}</span>
-              </li>
-            ))}
-          </ul>
-        </Panel>
+        <FeedHealthPanel />
       </div>
 
       <AlertsPanel regionId={regionId} />

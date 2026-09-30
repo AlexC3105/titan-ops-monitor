@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
 import type { FeedStatus, Flight } from '@/types'
-import { openSkyFlightsAdapter } from '@/services/adapters/openSkyFlights'
+import { useFeedStore } from '@/stores/useFeedStore'
 
 interface FlightsState {
   flights: Flight[]
@@ -10,25 +9,10 @@ interface FlightsState {
 
 const EMPTY: FlightsState = { flights: [], status: 'mock', loading: false }
 
-/** Fetches live flights only while `enabled` (the Flights layer is on). */
+/** Flights for a region while the Flights layer is on (the scheduler only polls then). */
 export function useFlights(regionId: string, enabled: boolean): FlightsState {
-  const [state, setState] = useState<FlightsState>(EMPTY)
-
-  useEffect(() => {
-    if (!enabled) {
-      setState(EMPTY)
-      return
-    }
-    let active = true
-    setState((s) => ({ ...s, loading: true }))
-    openSkyFlightsAdapter.fetch(regionId).then((res) => {
-      if (!active) return
-      setState({ flights: res.data ?? [], status: res.status, loading: false })
-    })
-    return () => {
-      active = false
-    }
-  }, [regionId, enabled])
-
-  return state
+  const f = useFeedStore((s) => s.flights)
+  if (!enabled) return EMPTY
+  if (!f || f.regionId !== regionId) return { ...EMPTY, loading: true }
+  return { flights: f.data, status: f.status, loading: false }
 }

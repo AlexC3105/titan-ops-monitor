@@ -19,7 +19,8 @@ controlled server-side access to feeds it cannot call directly.
 | Sample data | `src/services/mock/*` | Regions, layers, infrastructure, source catalog |
 | Scenario engine | `src/services/scenarioEngine.ts` | Pure, deterministic heuristic |
 | State | `src/stores/*` | Zustand with `persist` → `localStorage` |
-| Data hooks | `src/hooks/*` | Fetch on region change, expose loading + result |
+| Feed scheduler | `src/services/feeds/*` | Per-feed refresh, backoff, health, visibility / connectivity handling |
+| Data hooks | `src/hooks/*` | Read feed data from `useFeedStore` / `useStormStore` |
 
 ## Data flow
 
@@ -106,6 +107,38 @@ by the shared edge cache. Failed upstream responses are never cached (covered by
 The flights adapter has two explicit modes (`flightsMode` in `openSkyFlights.ts`):
 **dev-proxy** on the Vite dev server (browser → Vite `/osky` proxy → OpenSky) and **worker** in
 production builds. Both share the Worker's state-vector normaliser.
+
+## Feed scheduling and health
+
+All live feeds are refreshed by one `FeedScheduler` (`src/services/feeds/scheduler.ts`), started
+once in `App`. Components never poll; hooks read the latest data from `useFeedStore` /
+`useStormStore`.
+
+| Feed | Interval | First retry | Max backoff | Stale after | Notes |
+| --- | --- | --- | --- | --- | --- |
+| NWS forecast | 15 min | 1 min | 30 min | 45 min | forecasts are issued about hourly |
+| NWS alerts | 3 min | 1 min | 30 min | 9 min | direct from api.weather.gov |
+| NHC tropical systems | 5 min | 1 min | 30 min | 15 min | = Worker cache TTL (300 s); geometry refetched only when the selected storm's advisory changes |
+| Flights | 30 s | 30 s | 30 min | 90 s | = Worker cache TTL; only while the Flights layer is on |
+
+- **Source status vs health.** `live / mock / inactive` describes the data; health describes
+  operation: `healthy` (fresh live data, last attempt succeeded), `refreshing`, `degraded`
+  (serving fallback data, or the last attempt failed while live data is still fresh), `stale`
+  (newest live data older than **3 × interval**), `unavailable` (no data at all) and `paused`
+  (feed disabled, e.g. its layer is off). A mock fallback is never shown as healthy.
+- **Backoff.** After a non-live result the next attempt is `retryBase × 2^(failures − 1)`, capped at
+  the maximum; the first live result resets it and returns to the normal interval. Deterministic —
+  no jitter; feeds that become due together are staggered 300 ms apart instead.
+- **Retention.** A mock / unavailable result never replaces live data already held for the same
+  region: the last real observation stays on screen and the feed shows as degraded, then stale.
+  Changing region resets region-based feeds and refetches them immediately.
+- **No overlap.** A feed never has two requests in flight; manual refresh joins an in-flight request.
+- **Hidden tab.** Timers stop while `document.visibilityState` is `hidden`. When visible again,
+  feeds that are due run immediately (staggered); others keep their remaining delay.
+- **Offline.** `navigator.onLine === false` stops timers and manual refresh; the `online` event
+  resumes with the same staggered catch-up. Being "online" is not treated as proof that upstreams
+  are reachable — that is what per-feed health is for.
+- **Privacy.** Health is computed and shown locally; nothing is sent anywhere.
 
 ## Maps
 

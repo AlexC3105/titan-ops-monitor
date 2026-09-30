@@ -1,6 +1,7 @@
 import { Panel } from '@/components/Panel'
 import { StatusBadge } from '@/components/Badge'
 import { useStorms } from '@/hooks/useStorms'
+import { useAppStore } from '@/stores/useAppStore'
 import { classificationLabel, formatMovement, formatPosition } from '@/services/stormGeometry'
 import type { Storm } from '@/types'
 
@@ -50,6 +51,7 @@ function StormDetails({ storm }: { storm: Storm }) {
 
 export function StormPanel() {
   const { storms, status, loading, selectedStormId, toggle } = useStorms()
+  const layerOn = useAppStore((s) => s.layerVisibility['storms'] ?? true)
   const selected = storms.find((s) => s.id === selectedStormId) ?? null
 
   return (
@@ -65,7 +67,9 @@ export function StormPanel() {
         )
       }
     >
-      {loading ? (
+      {!layerOn ? (
+        <div className="flex h-12 items-center justify-center text-sm text-slate-500">Tropical systems layer is off.</div>
+      ) : loading ? (
         <div className="flex h-12 items-center justify-center text-sm text-slate-500">Checking NHC…</div>
       ) : status !== 'live' ? (
         <div className="flex h-12 items-center justify-center text-sm text-slate-500">Storm feed unavailable.</div>

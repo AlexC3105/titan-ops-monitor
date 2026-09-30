@@ -10,8 +10,8 @@ const GUARDRAILS = [
 ]
 
 const STATUS = [
-  ['Implemented', 'Live NWS forecast + alerts, NHC tropical systems with official forecast track and cone, OpenSky flights in local dev, API Worker with validation and caching, maps, saved settings, heuristic scenarios.'],
-  ['Next', 'Basemap provider replacement, feed-health panel, auto-refresh, production flight-data access, public deployment.'],
+  ['Implemented', 'Live NWS forecast + alerts, NHC tropical systems with official forecast track and cone, OpenSky flights in local dev, API Worker with validation and caching, feed health with auto-refresh, maps, saved settings, heuristic scenarios.'],
+  ['Next', 'Public deployment, CARTO real-key verification, production flight-data access.'],
   ['Later', 'Additional regions and data sources. See ROADMAP.md in the repository.'],
 ]
 

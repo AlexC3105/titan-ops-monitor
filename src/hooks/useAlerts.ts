@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
 import type { FeedStatus, WeatherAlert } from '@/types'
-import { nwsAlertsAdapter } from '@/services/adapters/nwsAlerts'
+import { useFeedStore } from '@/stores/useFeedStore'
 
 interface AlertsState {
   alerts: WeatherAlert[]
@@ -8,21 +7,9 @@ interface AlertsState {
   loading: boolean
 }
 
-/** Fetches active NWS alerts for a region (live → mock fallback). */
+/** Active NWS alerts for a region, kept fresh by the feed scheduler (live → mock fallback). */
 export function useAlerts(regionId: string): AlertsState {
-  const [state, setState] = useState<AlertsState>({ alerts: [], status: 'mock', loading: true })
-
-  useEffect(() => {
-    let active = true
-    setState((s) => ({ ...s, loading: true }))
-    nwsAlertsAdapter.fetch(regionId).then((res) => {
-      if (!active) return
-      setState({ alerts: res.data ?? [], status: res.status, loading: false })
-    })
-    return () => {
-      active = false
-    }
-  }, [regionId])
-
-  return state
+  const a = useFeedStore((s) => s.alerts)
+  if (!a || a.regionId !== regionId) return { alerts: [], status: 'mock', loading: true }
+  return { alerts: a.data, status: a.status, loading: false }
 }
