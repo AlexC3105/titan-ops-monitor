@@ -1,9 +1,9 @@
 // Two-tier cache for successful upstream responses only.
 //
-// 1. In-memory (per Worker isolate). Works everywhere, including *.workers.dev,
-//    but is not shared between isolates or locations.
-// 2. Cloudflare edge cache (caches.default). Shared per data centre, but it only
-//    takes effect on zones with a custom domain; on *.workers.dev it is a no-op.
+// 1. In-memory (per Worker isolate). Cheapest, but not shared between isolates,
+//    and consecutive requests often land on different isolates.
+// 2. Cloudflare edge cache (caches.default). Shared by isolates in the same
+//    data centre (observed working on *.workers.dev), not replicated globally.
 //
 // Entries are keyed by a synthetic URL built from the validated region id, so
 // equivalent requests always map to the same key.
@@ -24,13 +24,14 @@ export class ResponseCache {
   private readonly memory = new Map<string, Entry>()
 
   constructor(
-    private readonly ttlSeconds: number,
     private readonly now: () => number,
     private readonly edge?: EdgeCache,
   ) {}
 
-  static key(path: string, regionId: string): string {
-    return `https://titan-cache.internal${path}?region=${encodeURIComponent(regionId)}`
+  /** Deterministic key from the route and its (already validated) parameter, if any. */
+  static key(path: string, param?: [name: string, value: string]): string {
+    const query = param ? `?${param[0]}=${encodeURIComponent(param[1])}` : ''
+    return `https://titan-cache.internal${path}${query}`
   }
 
   async get(key: string): Promise<{ body: string; tier: Exclude<CacheTier, 'MISS'> } | null> {
@@ -50,13 +51,13 @@ export class ResponseCache {
     return null
   }
 
-  async put(key: string, body: string): Promise<void> {
-    this.memory.set(key, { body, expiresAt: this.now() + this.ttlSeconds * 1000 })
+  async put(key: string, body: string, ttlSeconds: number): Promise<void> {
+    this.memory.set(key, { body, expiresAt: this.now() + ttlSeconds * 1000 })
     if (this.edge) {
       await this.edge.put(
         new Request(key),
         new Response(body, {
-          headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${this.ttlSeconds}` },
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${ttlSeconds}` },
         }),
       )
     }

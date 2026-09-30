@@ -14,11 +14,15 @@ This file separates what exists today from what is planned. Anything not listed 
   - NWS active alerts (`api.weather.gov/alerts/active`)
   - OpenSky flight positions — live in **local development** (Vite dev proxy). Production builds
     go through the API Worker and currently fall back to mock (see Experimental).
-- TITAN API Worker (Cloudflare Workers, `worker/`), deployed: `GET /v1/flights?region=<id>` with
-  allowlisted region ids (no client-supplied coordinates or URLs), a fixed upstream, parameter
-  validation, 404/405 handling, CORS origin allowlist, 8 s upstream timeout, structured JSON errors,
-  and a 30 s success-only cache (per-isolate memory + Cloudflare edge cache). Validation and CORS
-  behaviour were verified against the deployed Worker.
+- TITAN API Worker (Cloudflare Workers, `worker/`), deployed, with two fixed routes:
+  - `GET /v1/storms` — live NOAA / NHC active storms, normalised; 300 s cache.
+  - `GET /v1/flights?region=<id>` — allowlisted region ids only (no client-supplied coordinates or
+    URLs); 30 s cache.
+
+  Fixed upstreams, parameter validation, 404/405 handling, CORS origin allowlist, 8 s upstream
+  timeout, structured JSON errors, success-only caching (per-isolate memory + Cloudflare edge
+  cache). Validation, CORS and cache MISS → HIT → expiry → MISS behaviour were verified against
+  the deployed Worker.
 - Two map renderers, switchable in Settings: MapLibre GL (WebGL) and a GPU-free raster-tile
   Web Mercator renderer.
 - Installable PWA (manifest + Workbox app-shell service worker).
@@ -37,16 +41,13 @@ This file separates what exists today from what is planned. Anything not listed 
 - **Production flight data** — OpenSky, adsb.lol and airplanes.live were tested from Cloudflare;
   none currently serves shared cloud origins (timeout, rate limit, access-by-request). The Worker
   returns structured errors and the app shows labelled mock flights.
-- **Worker cache in production** — implemented and tested, not yet measured live (no successful
-  upstream response so far). Edge-cache sharing on `*.workers.dev` is unverified.
 
 ## Planned (next)
 
 - Arrange production access with a flight-data provider (allowlisting or an issued key), then
   enable live flights through the existing Worker.
-- T3.0: probe NOAA / NHC reachability from Cloudflare before building the storm adapter; if
-  reachable, use it for the first real Worker cache miss/hit measurements.
-- National Hurricane Center storm data (tracks / cones) on the map.
+- Storms in the app (T3.1): storm map markers and current-storm details from `/v1/storms`;
+  select the official NHC forecast track / cone product, parse its geometry and render it on the map.
 - Feed-health panel: real fetch time, latency, live / mock / stale status per feed.
 - Auto-refresh with per-feed intervals and backoff.
 - Public deployment (Cloudflare Pages) with measured Lighthouse and bundle-size results.

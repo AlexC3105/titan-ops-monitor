@@ -1,9 +1,9 @@
 import type { BBox } from './regions'
+import { fetchUpstreamJson, type UpstreamFailure } from './upstream'
 
 // The only upstream this module talks to. Host and path are fixed; the query is
 // built from a server-side bounding box.
 export const OPENSKY_STATES_URL = 'https://opensky-network.org/api/states/all'
-export const UPSTREAM_TIMEOUT_MS = 8000
 export const MAX_FLIGHTS = 60
 
 export interface FlightDTO {
@@ -20,9 +20,9 @@ export interface FlightDTO {
   onGround: boolean
 }
 
-export type UpstreamResult =
+export type FlightsResult =
   | { ok: true; upstreamTime: number | null; flights: FlightDTO[] }
-  | { ok: false; kind: 'timeout' | 'rate_limited' | 'http' | 'network' | 'invalid'; status?: number }
+  | { ok: false; kind: UpstreamFailure }
 
 export function upstreamUrl([w, s, e, n]: BBox): string {
   return `${OPENSKY_STATES_URL}?lamin=${s}&lomin=${w}&lamax=${n}&lomax=${e}`
@@ -52,27 +52,14 @@ export function normalizeStates(states: unknown): FlightDTO[] {
   return flights
 }
 
-export async function fetchFlights(bbox: BBox, fetchImpl: typeof fetch): Promise<UpstreamResult> {
-  let res: Response
-  try {
-    res = await fetchImpl(upstreamUrl(bbox), {
-      headers: { Accept: 'application/json', 'User-Agent': 'titan-ops-monitor (github.com/AlexC3105/titan-ops-monitor)' },
-      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-    })
-  } catch (err) {
-    const name = (err as { name?: string } | null)?.name
-    return { ok: false, kind: name === 'TimeoutError' || name === 'AbortError' ? 'timeout' : 'network' }
-  }
-  if (res.status === 429) return { ok: false, kind: 'rate_limited', status: 429 }
-  if (!res.ok) return { ok: false, kind: 'http', status: res.status }
-  try {
-    const body = (await res.json()) as { time?: unknown; states?: unknown }
-    return {
-      ok: true,
-      upstreamTime: typeof body.time === 'number' ? body.time : null,
-      flights: normalizeStates(body.states),
-    }
-  } catch {
-    return { ok: false, kind: 'invalid' }
+export async function fetchFlights(bbox: BBox, fetchImpl: typeof fetch): Promise<FlightsResult> {
+  const res = await fetchUpstreamJson(upstreamUrl(bbox), fetchImpl)
+  if (!res.ok) return res
+  const body = res.body as { time?: unknown; states?: unknown } | null
+  if (!body || typeof body !== 'object') return { ok: false, kind: 'invalid' }
+  return {
+    ok: true,
+    upstreamTime: typeof body.time === 'number' ? body.time : null,
+    flights: normalizeStates(body.states),
   }
 }

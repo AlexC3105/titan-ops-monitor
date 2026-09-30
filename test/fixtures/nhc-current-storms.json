@@ -1,0 +1,75 @@
+{
+  "_note": "Recorded from https://www.nhc.noaa.gov/CurrentStorms.json on 2026-09-30; first 2 storms, fields trimmed.",
+  "activeStorms": [
+    {
+      "id": "al082026",
+      "binNumber": "AT3",
+      "name": "Hanna",
+      "classification": "TS",
+      "intensity": "35",
+      "pressure": "1006",
+      "latitude": "33.5N",
+      "longitude": "43.9W",
+      "latitudeNumeric": 33.5,
+      "longitudeNumeric": -43.9,
+      "movementDir": 120,
+      "movementSpeed": 5,
+      "lastUpdate": "2026-09-30T09:00:00.000Z",
+      "publicAdvisory": {
+        "advNum": "008",
+        "issuance": "2026-09-30T09:00:00.000Z",
+        "fileUpdateTime": "2026-09-30T08:42:54.673Z",
+        "url": "https://www.nhc.noaa.gov/text/MIATCPAT3.shtml"
+      },
+      "forecastTrack": {
+        "advNum": "008",
+        "issuance": "2026-09-30T09:00:00.000Z",
+        "fileUpdateTime": "2026-09-30T08:45:05.006Z",
+        "zipFile": "https://www.nhc.noaa.gov/gis/forecast/archive/al082026_5day_008.zip",
+        "kmzFile": "https://www.nhc.noaa.gov/storm_graphics/api/AL082026_008adv_TRACK.kmz"
+      },
+      "trackCone": {
+        "advNum": "008",
+        "issuance": "2026-09-30T09:00:00.000Z",
+        "fileUpdateTime": "2026-09-30T08:44:58.728Z",
+        "zipFile": "https://www.nhc.noaa.gov/gis/forecast/archive/al082026_5day_008.zip",
+        "kmzFile": "https://www.nhc.noaa.gov/storm_graphics/api/AL082026_008adv_CONE.kmz"
+      }
+    },
+    {
+      "id": "ep172026",
+      "binNumber": "EP2",
+      "name": "Polo",
+      "classification": "PTC",
+      "intensity": "30",
+      "pressure": "996",
+      "latitude": "30.5N",
+      "longitude": "108.0W",
+      "latitudeNumeric": 30.5,
+      "longitudeNumeric": -108,
+      "movementDir": 40,
+      "movementSpeed": 23,
+      "lastUpdate": "2026-09-30T03:00:00.000Z",
+      "publicAdvisory": {
+        "advNum": "038",
+        "issuance": "2026-09-30T03:00:00.000Z",
+        "fileUpdateTime": "2026-09-30T08:36:28.553Z",
+        "url": "https://www.nhc.noaa.gov/text/MIATCPEP2.shtml"
+      },
+      "forecastTrack": {
+        "advNum": "038",
+        "issuance": "2026-09-30T03:00:00.000Z",
+        "fileUpdateTime": "2026-09-30T02:33:00.202Z",
+        "zipFile": "https://www.nhc.noaa.gov/gis/forecast/archive/ep172026_5day_038.zip",
+        "kmzFile": "https://www.nhc.noaa.gov/storm_graphics/api/EP172026_038adv_TRACK.kmz"
+      },
+      "trackCone": {
+        "advNum": "038",
+        "issuance": "2026-09-30T03:00:00.000Z",
+        "fileUpdateTime": "2026-09-30T02:32:54.332Z",
+        "zipFile": "https://www.nhc.noaa.gov/gis/forecast/archive/ep172026_5day_038.zip",
+        "kmzFile": "https://www.nhc.noaa.gov/storm_graphics/api/EP172026_038adv_CONE.kmz"
+      }
+    }
+  ]
+}

@@ -23,8 +23,8 @@ _Screenshots and a live demo link will be added with the first public deployment
 | PWA | Installable; Workbox service worker caches the app shell |
 | State | Region, layers, map mode and the last 50 scenario results persist in `localStorage` |
 | Scenarios | 7 event types; deterministic heuristic outputs with confidence levels, drivers and explicit data gaps |
-| API Worker | Cloudflare Worker (`worker/`) exposing `GET /v1/flights?region=<id>`: allowlisted regions only, fixed upstream, request validation, CORS allowlist, upstream timeout, structured JSON errors, short success-only cache |
-| Quality | 86 Vitest tests (49 app, 37 Worker) on recorded, sanitised fixtures; CI runs typecheck, tests and build for both |
+| API Worker | Cloudflare Worker (`worker/`) with two fixed routes: `GET /v1/storms` (live NOAA / NHC active storms) and `GET /v1/flights?region=<id>` (allowlisted regions only). Fixed upstreams, request validation, CORS allowlist, upstream timeout, structured JSON errors, success-only caching verified in production |
+| Quality | 95 Vitest tests (49 app, 46 Worker) on recorded, sanitised fixtures; CI runs typecheck, tests and build for both |
 
 ## Data sources
 
@@ -32,6 +32,7 @@ _Screenshots and a live demo link will be added with the first public deployment
 | --- | --- | --- |
 | NWS forecast (`api.weather.gov`) | live | points → gridpoint forecast, 7 s timeout |
 | NWS active alerts | live | GeoJSON, severity normalised, capped at 20 |
+| NOAA / NHC active storms | live via the Worker | `/v1/storms`; not yet shown in the app (next milestone) |
 | OpenSky Network | live in local dev; mock in production | dev: Vite proxy. Production: via the Worker, but see limitations |
 | Infrastructure, layers, regions | static sample data | hard-coded |
 
@@ -98,9 +99,8 @@ and status labelling. Scenario tests check determinism, bounds and framing — n
   flight-data providers evaluated (OpenSky, adsb.lol, airplanes.live) block or throttle requests
   from shared cloud/serverless networks. Production therefore shows labelled mock flights until
   provider access is arranged. Local development still gets live OpenSky data.
-- **Flight cache not yet measured in production.** Caching is implemented and covered by tests,
-  but no successful upstream response has reached the Worker yet, so there are no real cache
-  hit/miss measurements.
+- **Storm data is not in the UI yet.** The Worker serves live NHC storms; map markers, details
+  and forecast tracks/cones are the next milestone.
 - **Florida only.** Regions and NWS area codes are currently Florida-specific.
 - **No auto-refresh yet.** Feeds are fetched when the region changes.
 - **Scenario numbers are illustrative.** Templates and weights are hand-set and uncalibrated.
