@@ -21,7 +21,7 @@ Every source is **mock-first**. A source is integrated only when a real adapter 
 
 ### Environment / weather
 - **NWS / NOAA** (`weather.gov`) — US weather + alerts. Free, key-less, CORS-enabled. Cadence: hourly. **live** (first real adapter: `src/services/adapters/nwsWeather.ts`, `points`→`forecast`, mock fallback on error).
-- **National Hurricane Center** (`www.nhc.noaa.gov/CurrentStorms.json`) — active tropical systems: id, name, classification, position, intensity, pressure, movement, last update, advisory number. **live via the Worker** (`/v1/storms`, verified from Cloudflare); not yet displayed in the app. Forecast tracks / cones come from separate NHC GIS products (KMZ / shapefile) — *planned.*
+- **National Hurricane Center** (`www.nhc.noaa.gov/CurrentStorms.json`) — active tropical systems: id, name, classification, position, intensity, pressure, movement, last update, advisory number. **live via the Worker** (`/v1/storms`), shown as map markers and a detail panel. Forecast track, forecast points and cone: **live** — the Worker fetches the shapefile archive URL that `CurrentStorms.json` publishes for the current advisory (`trackCone.zipFile`), and converts the `_lin` / `_pts` / `_pgn` layers to GeoJSON (`/v1/storms/<id>/geometry`). Source: [nhc.noaa.gov](https://www.nhc.noaa.gov/).
 - **OpenWeather** — global, needs API key. *inactive.*
 
 ### Transport

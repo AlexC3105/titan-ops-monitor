@@ -91,6 +91,7 @@ describe('GET /v1/storms', () => {
     expect([...edge.store.keys()].sort()).toEqual([
       'https://titan-cache.internal/v1/flights?region=tampa-bay',
       'https://titan-cache.internal/v1/storms',
+      'https://titan-cache.internal/v1/storms/_products',
     ])
   })
 })

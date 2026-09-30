@@ -22,6 +22,15 @@ export const LAYERS: DataLayer[] = [
     description: 'Road speeds, congestion, and major-corridor incidents.',
   },
   {
+    id: 'storms',
+    name: 'Tropical systems',
+    category: 'environment',
+    status: 'live',
+    enabledByDefault: true,
+    cadence: 'hourly',
+    description: 'Active tropical cyclones from NOAA / National Hurricane Center, with the official forecast track and cone for the selected storm.',
+  },
+  {
     id: 'flights',
     name: 'Flights',
     category: 'transport',

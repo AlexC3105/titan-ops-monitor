@@ -4,7 +4,9 @@ import { useAppStore } from '@/stores/useAppStore'
 import { getRegion } from '@/services/mock/regions'
 import { getInfraPoints } from '@/services/mock/infrastructure'
 import { useFlights } from '@/hooks/useFlights'
-import type { InfraKind } from '@/types'
+import { useStorms } from '@/hooks/useStorms'
+import { boundsCenter, classificationLabel, coneRings, fitZoom, forecastPoints, geometryBounds, trackLines } from '@/services/stormGeometry'
+import type { InfraKind, Storm } from '@/types'
 
 // Non-WebGL map: CARTO raster tiles as <img> + DOM markers, with pan and zoom.
 // Works on any browser regardless of GPU/WebGL support (the compatibility
@@ -45,12 +47,32 @@ export function StaticMap({ className = '' }: { className?: string }) {
   const [zoom, setZoom] = useState(9)
   const [center, setCenter] = useState<[number, number]>(() => getRegion(regionId).center)
   const { flights } = useFlights(regionId, Boolean(layerVisibility['flights']))
+  const stormsOn = layerVisibility['storms'] ?? true
+  const { storms, selectedStormId, geometry, toggle } = useStorms(stormsOn)
 
   // Recentre when the active region changes.
   useEffect(() => {
     setCenter(getRegion(regionId).center)
     setZoom(9)
   }, [regionId])
+
+  // Frame the selected storm's official forecast (or just the storm if NHC
+  // published no forecast geometry).
+  useEffect(() => {
+    if (!selectedStormId || size.w === 0) return
+    const bounds = geometryBounds(geometry)
+    if (bounds) {
+      setCenter(boundsCenter(bounds))
+      setZoom(fitZoom(bounds, size.w, size.h, MIN_Z, 9))
+    } else {
+      const storm = storms.find((st) => st.id === selectedStormId)
+      if (storm) {
+        setCenter(storm.coord)
+        setZoom(6)
+      }
+    }
+    // Re-frame only when the selection or its geometry changes.
+  }, [selectedStormId, geometry])
 
   // Track container size.
   useEffect(() => {
@@ -112,6 +134,8 @@ export function StaticMap({ className = '' }: { className?: string }) {
   const region = getRegion(regionId)
   const infra = layerVisibility['infrastructure'] ? getInfraPoints(regionId) : []
   const showFlights = Boolean(layerVisibility['flights'])
+  const showForecast = stormsOn && selectedStormId !== null && geometry?.stormId === selectedStormId
+  const path = (coords: number[][]) => coords.map((c) => toScreen(c[0], c[1]).join(',')).join(' ')
 
   return (
     <div
@@ -136,6 +160,25 @@ export function StaticMap({ className = '' }: { className?: string }) {
           />
         ))}
 
+        {size.w > 0 && showForecast && (
+          <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-label="NHC forecast cone and track">
+            {coneRings(geometry.cone).map((ring, i) => (
+              <polygon key={`c${i}`} points={path(ring)} fill="#cbd5e1" fillOpacity={0.14} stroke="#cbd5e1" strokeOpacity={0.6} strokeWidth={1} />
+            ))}
+            {trackLines(geometry.track).map((line, i) => (
+              <polyline key={`t${i}`} points={path(line)} fill="none" stroke="#f8fafc" strokeWidth={1.5} strokeDasharray="4 3" />
+            ))}
+            {forecastPoints(geometry.track).map((pt, i) => {
+              const [x, y] = toScreen(pt.coord[0], pt.coord[1])
+              return (
+                <circle key={`p${i}`} cx={x} cy={y} r={3.5} fill="#0b1220" stroke="#f8fafc" strokeWidth={1.5}>
+                  <title>{`+${pt.tau ?? '?'} h${pt.maxWindKt !== null ? ` · ${pt.maxWindKt} kt` : ''}`}</title>
+                </circle>
+              )
+            })}
+          </svg>
+        )}
+
         {size.w > 0 && (
           <>
             <Dot pos={toScreen(region.center[0], region.center[1])} color="#38bdf8" size={16} ring title={region.name} />
@@ -148,6 +191,16 @@ export function StaticMap({ className = '' }: { className?: string }) {
                 const s = toScreen(f.coord[0], f.coord[1])
                 return <Plane key={f.id} pos={s} track={f.track} onGround={f.onGround} title={f.callsign} />
               })}
+            {stormsOn &&
+              storms.map((st) => (
+                <StormMarker
+                  key={st.id}
+                  storm={st}
+                  pos={toScreen(st.coord[0], st.coord[1])}
+                  selected={st.id === selectedStormId}
+                  onSelect={() => void toggle(st.id)}
+                />
+              ))}
           </>
         )}
       </div>
@@ -176,7 +229,7 @@ export function StaticMap({ className = '' }: { className?: string }) {
       )}
 
       <div className="pointer-events-none absolute bottom-1 right-1 z-10 rounded bg-base-900/70 px-1.5 py-0.5 text-[9px] text-slate-500">
-        © OpenStreetMap · CARTO
+        © OpenStreetMap · CARTO{stormsOn && storms.length > 0 ? ' · Storms: NOAA/NHC' : ''}
       </div>
     </div>
   )
@@ -238,5 +291,37 @@ function Plane({
         <path d="M12 2l7 19-7-4-7 4z" />
       </svg>
     </div>
+  )
+}
+
+function StormMarker({
+  storm,
+  pos,
+  selected,
+  onSelect,
+}: {
+  storm: Storm
+  pos: [number, number]
+  selected: boolean
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={onSelect}
+      title={`${storm.name} · ${classificationLabel(storm.classification)} (NHC)`}
+      aria-pressed={selected}
+      className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1"
+      style={{ left: pos[0], top: pos[1] }}
+    >
+      <span
+        className="block rounded-full border-2 bg-base-950"
+        style={{ width: 14, height: 14, borderColor: selected ? '#f8fafc' : '#cbd5e1', boxShadow: selected ? '0 0 0 3px #f8fafc55' : 'none' }}
+      />
+      <span className="whitespace-nowrap rounded bg-base-900/80 px-1 text-[10px] text-slate-200">
+        {storm.classification} {storm.name}
+      </span>
+    </button>
   )
 }

@@ -6,7 +6,9 @@ import { getRegion } from '@/services/mock/regions'
 import { getInfraPoints } from '@/services/mock/infrastructure'
 import { GlobePlaceholder } from '@/components/GlobePlaceholder'
 import { useFlights } from '@/hooks/useFlights'
-import type { Flight, InfraKind } from '@/types'
+import { useStorms } from '@/hooks/useStorms'
+import { classificationLabel, geometryBounds } from '@/services/stormGeometry'
+import type { Flight, GeoFeatureCollection, InfraKind, Storm, StormGeometry } from '@/types'
 
 // Free, key-less dark raster basemap (CARTO). Vector styles / MapTiler can swap
 // in later behind the same component.
@@ -68,6 +70,61 @@ function makePlaneMarker(f: Flight) {
     .setPopup(new maplibregl.Popup({ offset: 12, closeButton: false }).setText(`${f.callsign} · ${alt}`))
 }
 
+function makeStormMarker(storm: Storm, selected: boolean, onSelect: () => void) {
+  const el = document.createElement('button')
+  el.type = 'button'
+  el.title = `${storm.name} · ${classificationLabel(storm.classification)} (NHC)`
+  el.style.cssText = 'display:flex;align-items:center;gap:4px;cursor:pointer;background:none;border:0;padding:0'
+  const ring = document.createElement('span')
+  ring.style.cssText = `display:block;width:14px;height:14px;border-radius:9999px;background:#0b1220;border:2px solid ${
+    selected ? '#f8fafc' : '#cbd5e1'
+  };${selected ? 'box-shadow:0 0 0 3px #f8fafc55;' : ''}`
+  const label = document.createElement('span')
+  label.textContent = `${storm.classification} ${storm.name}`
+  label.style.cssText = 'white-space:nowrap;border-radius:4px;background:rgba(11,18,32,.8);padding:0 4px;font-size:10px;color:#e2e8f0'
+  el.append(ring, label)
+  el.addEventListener('click', (e) => {
+    e.stopPropagation()
+    onSelect()
+  })
+  return new maplibregl.Marker({ element: el, anchor: 'left', offset: [-7, 0] }).setLngLat(storm.coord)
+}
+
+const EMPTY_FC: GeoFeatureCollection = { type: 'FeatureCollection', features: [] }
+
+/** Add NHC forecast sources/layers once the style is ready. */
+function ensureStormLayers(map: maplibregl.Map) {
+  if (map.getSource('nhc-cone')) return
+  map.addSource('nhc-cone', {
+    type: 'geojson',
+    data: EMPTY_FC as GeoJSON.FeatureCollection,
+    attribution: 'Storm forecast: NOAA / National Hurricane Center',
+  })
+  map.addSource('nhc-track', { type: 'geojson', data: EMPTY_FC as GeoJSON.FeatureCollection })
+  map.addLayer({ id: 'nhc-cone-fill', type: 'fill', source: 'nhc-cone', paint: { 'fill-color': '#cbd5e1', 'fill-opacity': 0.14 } })
+  map.addLayer({ id: 'nhc-cone-line', type: 'line', source: 'nhc-cone', paint: { 'line-color': '#cbd5e1', 'line-opacity': 0.6, 'line-width': 1 } })
+  map.addLayer({
+    id: 'nhc-track-line',
+    type: 'line',
+    source: 'nhc-track',
+    filter: ['==', ['geometry-type'], 'LineString'],
+    paint: { 'line-color': '#f8fafc', 'line-width': 1.5, 'line-dasharray': [3, 2] },
+  })
+  map.addLayer({
+    id: 'nhc-track-points',
+    type: 'circle',
+    source: 'nhc-track',
+    filter: ['==', ['geometry-type'], 'Point'],
+    paint: { 'circle-radius': 3.5, 'circle-color': '#0b1220', 'circle-stroke-color': '#f8fafc', 'circle-stroke-width': 1.5 },
+  })
+}
+
+function setStormGeometry(map: maplibregl.Map, geometry: StormGeometry | null) {
+  ensureStormLayers(map)
+  ;(map.getSource('nhc-cone') as maplibregl.GeoJSONSource).setData((geometry?.cone ?? EMPTY_FC) as GeoJSON.FeatureCollection)
+  ;(map.getSource('nhc-track') as maplibregl.GeoJSONSource).setData((geometry?.track ?? EMPTY_FC) as GeoJSON.FeatureCollection)
+}
+
 /**
  * Interactive map (MapLibre GL). Selected via RegionMap when map mode is
  * 'interactive'. Centers on the active region, flies on region change, and
@@ -84,6 +141,8 @@ export function MapView({ className = '' }: { className?: string }) {
   const { regionId, layerVisibility } = useAppStore()
   const flightsEnabled = Boolean(layerVisibility['flights'])
   const { flights } = useFlights(regionId, flightsEnabled)
+  const stormsOn = layerVisibility['storms'] ?? true
+  const { storms, selectedStormId, geometry, toggle } = useStorms(stormsOn)
 
   // Create the map once and keep it alive across React StrictMode's dev
   // double-invoke and Fast Refresh; teardown is deferred so an immediate
@@ -160,7 +219,31 @@ export function MapView({ className = '' }: { className?: string }) {
         markersRef.current.push(makePlaneMarker(f).addTo(map))
       }
     }
-  }, [regionId, layerVisibility, flights, flightsEnabled])
+    if (stormsOn) {
+      for (const st of storms) {
+        markersRef.current.push(makeStormMarker(st, st.id === selectedStormId, () => void toggle(st.id)).addTo(map))
+      }
+    }
+  }, [regionId, layerVisibility, flights, flightsEnabled, storms, stormsOn, selectedStormId, toggle])
+
+  // Draw the selected storm's official NHC cone + track and frame it.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    const shown = stormsOn && geometry?.stormId === selectedStormId ? geometry : null
+    const apply = () => {
+      setStormGeometry(map, shown)
+      const bounds = geometryBounds(shown)
+      if (bounds) {
+        map.fitBounds([[bounds[0], bounds[1]], [bounds[2], bounds[3]]], { padding: 40, maxZoom: 9, duration: 800 })
+      } else if (selectedStormId) {
+        const storm = storms.find((st) => st.id === selectedStormId)
+        if (storm) map.flyTo({ center: storm.coord, zoom: 6, speed: 1.4 })
+      }
+    }
+    if (map.isStyleLoaded()) apply()
+    else map.once('load', apply)
+  }, [geometry, selectedStormId, stormsOn, storms])
 
   if (failed) return <GlobePlaceholder className={className} />
 

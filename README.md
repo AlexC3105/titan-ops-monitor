@@ -19,12 +19,13 @@ _Screenshots and a live demo link will be added with the first public deployment
 | Live data | National Weather Service forecast and active alerts (direct from the browser); OpenSky flight positions in local development |
 | Adapter layer | `DataAdapter<T>` contract; every result carries `live` / `mock` status and a fetch time; timeouts fall back to clearly labelled mock data |
 | Maps | MapLibre GL (WebGL) and a hand-written GPU-free Web Mercator tile renderer, switchable at runtime |
+| Tropical systems | Active NOAA / NHC storms as map markers with a detail panel (wind kt, pressure mb, motion, advisory); selecting a storm draws NHC's official forecast track, forecast points and cone of uncertainty in both renderers |
 | App | React 18 + TypeScript, 8 routes, responsive shell with sidebar and mobile navigation |
 | PWA | Installable; Workbox service worker caches the app shell |
 | State | Region, layers, map mode and the last 50 scenario results persist in `localStorage` |
 | Scenarios | 7 event types; deterministic heuristic outputs with confidence levels, drivers and explicit data gaps |
-| API Worker | Cloudflare Worker (`worker/`) with two fixed routes: `GET /v1/storms` (live NOAA / NHC active storms) and `GET /v1/flights?region=<id>` (allowlisted regions only). Fixed upstreams, request validation, CORS allowlist, upstream timeout, structured JSON errors, success-only caching verified in production |
-| Quality | 95 Vitest tests (49 app, 46 Worker) on recorded, sanitised fixtures; CI runs typecheck, tests and build for both |
+| API Worker | Cloudflare Worker (`worker/`) with fixed routes: `GET /v1/storms` (live NOAA / NHC active storms), `GET /v1/storms/<id>/geometry` (official NHC forecast track + cone, converted server-side from NHC's shapefile archive to GeoJSON) and `GET /v1/flights?region=<id>` (allowlisted regions only). Fixed upstreams, request validation, CORS allowlist, upstream timeout, structured JSON errors, success-only caching verified in production |
+| Quality | 147 Vitest tests (68 app, 79 Worker) on recorded, sanitised fixtures; CI runs typecheck, tests and build for both |
 
 ## Data sources
 
@@ -32,7 +33,7 @@ _Screenshots and a live demo link will be added with the first public deployment
 | --- | --- | --- |
 | NWS forecast (`api.weather.gov`) | live | points → gridpoint forecast, 7 s timeout |
 | NWS active alerts | live | GeoJSON, severity normalised, capped at 20 |
-| NOAA / NHC active storms | live via the Worker | `/v1/storms`; not yet shown in the app (next milestone) |
+| NOAA / NHC active storms + forecast track / cone | live via the Worker | storm list from `CurrentStorms.json`; track and cone from the forecast archive URL NHC publishes for each advisory |
 | OpenSky Network | live in local dev; mock in production | dev: Vite proxy. Production: via the Worker, but see limitations |
 | Infrastructure, layers, regions | static sample data | hard-coded |
 
@@ -99,8 +100,10 @@ and status labelling. Scenario tests check determinism, bounds and framing — n
   flight-data providers evaluated (OpenSky, adsb.lol, airplanes.live) block or throttle requests
   from shared cloud/serverless networks. Production therefore shows labelled mock flights until
   provider access is arranged. Local development still gets live OpenSky data.
-- **Storm data is not in the UI yet.** The Worker serves live NHC storms; map markers, details
-  and forecast tracks/cones are the next milestone.
+- **Basemap tiles need replacing.** CARTO's basemap service now returns "API key required"
+  placeholder tiles, so the map background is currently unusable in both renderers. Data layers
+  (storms, flights, markers) still draw on top. Choosing a replacement provider is the next task.
+- **Storm list is fetched once per page load** (no auto-refresh yet).
 - **Florida only.** Regions and NWS area codes are currently Florida-specific.
 - **No auto-refresh yet.** Feeds are fetched when the region changes.
 - **Scenario numbers are illustrative.** Templates and weights are hand-set and uncalibrated.
@@ -110,7 +113,9 @@ and status labelling. Scenario tests check determinism, bounds and framing — n
 
 Map tiles © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors ©
 [CARTO](https://carto.com/attributions). Weather data from the U.S.
-[National Weather Service](https://www.weather.gov/). Flight data from
+[National Weather Service](https://www.weather.gov/). Tropical-cyclone data and forecast
+track / cone products from the [NOAA National Hurricane Center](https://www.nhc.noaa.gov/)
+(TITAN is independent and not endorsed by NOAA). Flight data from
 [The OpenSky Network](https://opensky-network.org/).
 
 ## License

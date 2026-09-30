@@ -8,13 +8,20 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "check": "wrangler deploy --dry-run --outdir dist",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p test",
     "test": "vitest run"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260930.1",
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^22.20.4",
+    "@types/shapefile": "^0.6.4",
     "typescript": "^5.9.3",
     "vitest": "^2.1.9",
     "wrangler": "^4.144.0"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3",
+    "shapefile": "^0.6.6"
   }
 }

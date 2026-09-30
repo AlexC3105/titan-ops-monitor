@@ -144,3 +144,57 @@ export interface Flight {
   velocity: number | null
   onGround: boolean
 }
+
+// --- Tropical systems (NOAA / NHC via the TITAN API Worker) ---
+
+export interface Storm {
+  id: string
+  name: string
+  /** NHC classification code as published (e.g. TD, TS, HU, PTC). */
+  classification: string
+  /** [lon, lat] */
+  coord: [number, number]
+  /** Maximum sustained wind, knots. */
+  intensityKt: number | null
+  /** Minimum central pressure, millibars. */
+  pressureMb: number | null
+  /** Direction of motion, degrees clockwise from north. */
+  movementDirDeg: number | null
+  /** Speed of motion, mph. */
+  movementSpeedMph: number | null
+  /** ISO time of NHC's latest update. */
+  lastUpdate: string | null
+  advisoryNumber: string | null
+}
+
+/** Minimal GeoJSON shapes used for NHC forecast geometry. */
+export type GeoGeometry =
+  | { type: 'Point'; coordinates: number[] }
+  | { type: 'LineString'; coordinates: number[][] }
+  | { type: 'MultiLineString'; coordinates: number[][][] }
+  | { type: 'Polygon'; coordinates: number[][][] }
+  | { type: 'MultiPolygon'; coordinates: number[][][][] }
+
+export interface GeoFeature {
+  type: 'Feature'
+  geometry: GeoGeometry
+  properties: Record<string, unknown> | null
+}
+
+export interface GeoFeatureCollection {
+  type: 'FeatureCollection'
+  features: GeoFeature[]
+}
+
+export interface StormGeometry {
+  stormId: string
+  advisoryNumber: string | null
+  /** Advisory issuance label as published by NHC. */
+  issuance: string | null
+  /** Forecast centre line plus forecast points; null if NHC supplied none. */
+  track: GeoFeatureCollection | null
+  /** Cone of uncertainty; null if NHC supplied none. */
+  cone: GeoFeatureCollection | null
+  /** Set when NHC has not published a forecast product for this storm. */
+  reason?: string
+}

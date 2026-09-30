@@ -2,12 +2,13 @@ import { PageHeader } from '@/components/PageHeader'
 import { RegionMap } from '@/components/RegionMap'
 import { WeatherPanel } from '@/components/WeatherPanel'
 import { AlertsPanel } from '@/components/AlertsPanel'
+import { StormPanel } from '@/components/StormPanel'
 import { StatusBadge } from '@/components/Badge'
 import { useAppStore } from '@/stores/useAppStore'
 import { LAYERS } from '@/services/mock/layers'
 
 // Layers now backed by a real adapter.
-const LIVE_LAYERS = new Set(['weather', 'flights'])
+const LIVE_LAYERS = new Set(['weather', 'flights', 'storms'])
 
 export function WorldViewPage() {
   const { regionId, layerVisibility, toggleLayer } = useAppStore()
@@ -16,12 +17,13 @@ export function WorldViewPage() {
     <div className="flex h-full flex-col">
       <PageHeader
         title="World View"
-        description="Interactive map with toggleable live-world data layers. Weather is a live NWS feed; remaining layers are mock-first."
+        description="Interactive map with toggleable live-world data layers. Weather and tropical systems are live NOAA feeds; remaining layers are mock-first."
       />
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[1fr_19rem]">
         <RegionMap className="min-h-[24rem]" />
 
         <div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
+          <StormPanel />
           <WeatherPanel regionId={regionId} />
           <AlertsPanel regionId={regionId} />
 

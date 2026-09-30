@@ -21,7 +21,31 @@ export interface StormDTO {
   advisoryNumber: string | null
 }
 
-export type StormsResult = { ok: true; storms: StormDTO[] } | { ok: false; kind: UpstreamFailure }
+/** Server-side only: where each storm's current forecast GIS archive lives. */
+export interface StormProduct {
+  advisoryNumber: string | null
+  /** Shapefile ZIP URL exactly as published in CurrentStorms.json, or null. */
+  archiveUrl: string | null
+}
+
+export type StormsResult =
+  | { ok: true; storms: StormDTO[]; products: Record<string, StormProduct> }
+  | { ok: false; kind: UpstreamFailure }
+
+/** Prefer the cone product's archive, then the track's (NHC publishes one ZIP for both). */
+export function productsFrom(list: unknown): Record<string, StormProduct> {
+  const out: Record<string, StormProduct> = {}
+  if (!Array.isArray(list)) return out
+  for (const s of list) {
+    if (!s || typeof s.id !== 'string') continue
+    const src = s.trackCone ?? s.forecastTrack
+    out[s.id] = {
+      advisoryNumber: typeof src?.advNum === 'string' ? src.advNum : null,
+      archiveUrl: typeof src?.zipFile === 'string' ? src.zipFile : null,
+    }
+  }
+  return out
+}
 
 function num(v: unknown): number | null {
   const n = typeof v === 'string' ? Number(v) : v
@@ -58,5 +82,5 @@ export async function fetchStorms(fetchImpl: typeof fetch): Promise<StormsResult
   if (!res.ok) return res
   const body = res.body as { activeStorms?: unknown } | null
   if (!body || typeof body !== 'object' || !Array.isArray(body.activeStorms)) return { ok: false, kind: 'invalid' }
-  return { ok: true, storms: normalizeStorms(body.activeStorms) }
+  return { ok: true, storms: normalizeStorms(body.activeStorms), products: productsFrom(body.activeStorms) }
 }

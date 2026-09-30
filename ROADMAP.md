@@ -16,6 +16,9 @@ This file separates what exists today from what is planned. Anything not listed 
     go through the API Worker and currently fall back to mock (see Experimental).
 - TITAN API Worker (Cloudflare Workers, `worker/`), deployed, with two fixed routes:
   - `GET /v1/storms` — live NOAA / NHC active storms, normalised; 300 s cache.
+  - `GET /v1/storms/<id>/geometry` — official NHC forecast track, forecast points and cone for an
+    active storm, converted server-side from NHC's shapefile archive to GeoJSON; cached per
+    storm + advisory number.
   - `GET /v1/flights?region=<id>` — allowlisted region ids only (no client-supplied coordinates or
     URLs); 30 s cache.
 
@@ -25,6 +28,9 @@ This file separates what exists today from what is planned. Anything not listed 
   the deployed Worker.
 - Two map renderers, switchable in Settings: MapLibre GL (WebGL) and a GPU-free raster-tile
   Web Mercator renderer.
+- Tropical systems layer: active NHC storms as markers in both map renderers, a detail panel
+  (NHC classification, position, wind in kt, pressure in mb, motion, advisory, last update) and the
+  official forecast track, forecast points and cone for the selected storm, with NHC's cone caveat.
 - Installable PWA (manifest + Workbox app-shell service worker).
 - Settings and scenario history persisted to `localStorage`.
 - Heuristic scenario engine: 7 event types, deterministic output, confidence levels and explicit
@@ -46,8 +52,8 @@ This file separates what exists today from what is planned. Anything not listed 
 
 - Arrange production access with a flight-data provider (allowlisting or an issued key), then
   enable live flights through the existing Worker.
-- Storms in the app (T3.1): storm map markers and current-storm details from `/v1/storms`;
-  select the official NHC forecast track / cone product, parse its geometry and render it on the map.
+- Replace the CARTO basemap, which now requires an API key.
+- Feed-health panel and auto-refresh (including the storm list).
 - Feed-health panel: real fetch time, latency, live / mock / stale status per feed.
 - Auto-refresh with per-feed intervals and backoff.
 - Public deployment (Cloudflare Pages) with measured Lighthouse and bundle-size results.
