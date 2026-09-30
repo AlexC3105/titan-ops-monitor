@@ -5,33 +5,21 @@ import { useAppStore } from '@/stores/useAppStore'
 import { getRegion } from '@/services/mock/regions'
 import { getInfraPoints } from '@/services/mock/infrastructure'
 import { GlobePlaceholder } from '@/components/GlobePlaceholder'
+import { BasemapNotice } from '@/components/BasemapNotice'
+import { basemapConfig } from '@/services/basemap'
 import { useFlights } from '@/hooks/useFlights'
 import { useStorms } from '@/hooks/useStorms'
 import { classificationLabel, geometryBounds } from '@/services/stormGeometry'
 import type { Flight, GeoFeatureCollection, InfraKind, Storm, StormGeometry } from '@/types'
 
-// Free, key-less dark raster basemap (CARTO). Vector styles / MapTiler can swap
-// in later behind the same component.
-const BASEMAP_STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    carto: {
-      type: 'raster',
-      tiles: [
-        'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-        'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-        'https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-      ],
-      tileSize: 256,
-      attribution: '© OpenStreetMap contributors © CARTO',
-    },
-  },
-  layers: [
-    { id: 'bg', type: 'background', paint: { 'background-color': '#0a1626' } },
-    { id: 'carto', type: 'raster', source: 'carto' },
-  ],
-}
+// CARTO Dark Matter vector style (keyed; see services/basemap.ts). Without a
+// key the map uses a plain background so no placeholder tiles are requested;
+// data layers still render.
+const BASEMAP = basemapConfig()
+const MAP_STYLE: string | maplibregl.StyleSpecification =
+  BASEMAP.status === 'ok'
+    ? BASEMAP.styleUrl
+    : { version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#0a1626' } }] }
 
 const INFRA_COLOR: Record<InfraKind, string> = {
   port: '#fbbf24',
@@ -160,7 +148,7 @@ export function MapView({ className = '' }: { className?: string }) {
       try {
         const map = new maplibregl.Map({
           container,
-          style: BASEMAP_STYLE,
+          style: MAP_STYLE,
           center: getRegion(useAppStore.getState().regionId).center,
           zoom: 9,
           attributionControl: { compact: true },
@@ -241,8 +229,13 @@ export function MapView({ className = '' }: { className?: string }) {
         if (storm) map.flyTo({ center: storm.coord, zoom: 6, speed: 1.4 })
       }
     }
+    // 'load' fires only once; while a (vector) style is still loading, wait for
+    // the next 'idle' instead so late geometry is never dropped.
     if (map.isStyleLoaded()) apply()
-    else map.once('load', apply)
+    else map.once('idle', apply)
+    return () => {
+      map.off('idle', apply)
+    }
   }, [geometry, selectedStormId, stormsOn, storms])
 
   if (failed) return <GlobePlaceholder className={className} />
@@ -251,7 +244,11 @@ export function MapView({ className = '' }: { className?: string }) {
     <div
       className={`relative overflow-hidden rounded-xl border border-base-700/60 bg-base-950 ${className}`}
     >
-      <div ref={containerRef} className="absolute inset-0" />
+      {/* Inline position: maplibre-gl.css (loaded with this lazy chunk) sets
+          .maplibregl-map { position: relative }, which would override a class and
+          collapse the map to 0 px height. */}
+      <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
+      {BASEMAP.status === 'missing-key' && <BasemapNotice />}
       {flightsEnabled && (
         <div className="pointer-events-none absolute left-3 top-3 rounded-md bg-base-900/80 px-2 py-1 text-[11px] text-slate-300">
           ✈ {flights.length} aircraft

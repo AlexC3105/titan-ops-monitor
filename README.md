@@ -25,7 +25,7 @@ _Screenshots and a live demo link will be added with the first public deployment
 | State | Region, layers, map mode and the last 50 scenario results persist in `localStorage` |
 | Scenarios | 7 event types; deterministic heuristic outputs with confidence levels, drivers and explicit data gaps |
 | API Worker | Cloudflare Worker (`worker/`) with fixed routes: `GET /v1/storms` (live NOAA / NHC active storms), `GET /v1/storms/<id>/geometry` (official NHC forecast track + cone, converted server-side from NHC's shapefile archive to GeoJSON) and `GET /v1/flights?region=<id>` (allowlisted regions only). Fixed upstreams, request validation, CORS allowlist, upstream timeout, structured JSON errors, success-only caching verified in production |
-| Quality | 147 Vitest tests (68 app, 79 Worker) on recorded, sanitised fixtures; CI runs typecheck, tests and build for both |
+| Quality | 154 Vitest tests (75 app, 79 Worker) on recorded, sanitised fixtures; CI runs typecheck, tests and build for both |
 
 ## Data sources
 
@@ -73,7 +73,24 @@ npm run build      # typecheck + production build to dist/
 npm run preview    # serve the production build
 ```
 
-No API keys or environment variables are needed. To run the API Worker locally:
+### Basemap key
+
+The map uses CARTO's Dark Matter basemap, which needs a free CARTO basemap key
+([carto.com/basemaps/apikey](https://carto.com/basemaps/apikey)). The same key serves the raster
+tiles (compatibility renderer) and the MapLibre vector style (interactive renderer).
+
+```bash
+cp .env.example .env.local    # .env.local is git-ignored
+# then set VITE_CARTO_BASEMAP_KEY=<your key>
+```
+
+This is a **browser key**: Vite embeds it in the bundle and it appears in tile requests. Protect it
+with CARTO's website (Referer) restrictions, not secrecy. CARTO requires a **separate key for
+local development** (`localhost`, `127.0.0.1`), because a key that lists localhost cannot also list
+public sites. Without a key the app still runs: the map shows a "Basemap not configured" notice
+on a plain background and all data layers work. Tests and CI need no key.
+
+To run the API Worker locally:
 
 ```bash
 npm --prefix worker ci
@@ -100,9 +117,8 @@ and status labelling. Scenario tests check determinism, bounds and framing — n
   flight-data providers evaluated (OpenSky, adsb.lol, airplanes.live) block or throttle requests
   from shared cloud/serverless networks. Production therefore shows labelled mock flights until
   provider access is arranged. Local development still gets live OpenSky data.
-- **Basemap tiles need replacing.** CARTO's basemap service now returns "API key required"
-  placeholder tiles, so the map background is currently unusable in both renderers. Data layers
-  (storms, flights, markers) still draw on top. Choosing a replacement provider is the next task.
+- **Basemap needs a CARTO key.** Without `VITE_CARTO_BASEMAP_KEY` the map shows a plain background
+  (see "Basemap key").
 - **Storm list is fetched once per page load** (no auto-refresh yet).
 - **Florida only.** Regions and NWS area codes are currently Florida-specific.
 - **No auto-refresh yet.** Feeds are fetched when the region changes.

@@ -6,6 +6,8 @@ import { getInfraPoints } from '@/services/mock/infrastructure'
 import { useFlights } from '@/hooks/useFlights'
 import { useStorms } from '@/hooks/useStorms'
 import { boundsCenter, classificationLabel, coneRings, fitZoom, forecastPoints, geometryBounds, trackLines } from '@/services/stormGeometry'
+import { CARTO_ATTRIBUTION, basemapConfig, rasterTileUrl } from '@/services/basemap'
+import { BasemapNotice } from '@/components/BasemapNotice'
 import type { InfraKind, Storm } from '@/types'
 
 // Non-WebGL map: CARTO raster tiles as <img> + DOM markers, with pan and zoom.
@@ -24,7 +26,7 @@ const INFRA_COLOR: Record<InfraKind, string> = {
 const TILE = 256
 const MIN_Z = 4
 const MAX_Z = 15
-const SUBS = ['a', 'b', 'c', 'd']
+const BASEMAP = basemapConfig()
 
 function project(lon: number, lat: number, worldSize: number): [number, number] {
   const x = ((lon + 180) / 360) * worldSize
@@ -96,7 +98,8 @@ export function StaticMap({ className = '' }: { className?: string }) {
   }
 
   const tiles: { key: string; src: string; left: number; top: number }[] = []
-  if (size.w > 0 && size.h > 0) {
+  // No key → no tile requests at all (they would only return placeholders).
+  if (BASEMAP.status === 'ok' && size.w > 0 && size.h > 0) {
     const minTx = Math.floor(originX / TILE)
     const maxTx = Math.floor((originX + size.w) / TILE)
     const minTy = Math.floor(originY / TILE)
@@ -105,10 +108,9 @@ export function StaticMap({ className = '' }: { className?: string }) {
       for (let ty = minTy; ty <= maxTy; ty++) {
         if (ty < 0 || ty >= n) continue
         const wx = ((tx % n) + n) % n
-        const sub = SUBS[Math.abs(tx + ty) % SUBS.length]
         tiles.push({
           key: `${tx}_${ty}`,
-          src: `https://${sub}.basemaps.cartocdn.com/dark_all/${zoom}/${wx}/${ty}.png`,
+          src: rasterTileUrl(BASEMAP.rasterTemplate, zoom, wx, ty),
           left: tx * TILE - originX,
           top: ty * TILE - originY,
         })
@@ -228,8 +230,10 @@ export function StaticMap({ className = '' }: { className?: string }) {
         </div>
       )}
 
+      {BASEMAP.status === 'missing-key' && <BasemapNotice />}
+
       <div className="pointer-events-none absolute bottom-1 right-1 z-10 rounded bg-base-900/70 px-1.5 py-0.5 text-[9px] text-slate-500">
-        © OpenStreetMap · CARTO{stormsOn && storms.length > 0 ? ' · Storms: NOAA/NHC' : ''}
+        {BASEMAP.status === 'ok' ? CARTO_ATTRIBUTION : ''}{stormsOn && storms.length > 0 ? `${BASEMAP.status === 'ok' ? ' · ' : ''}Storms: NOAA/NHC` : ''}
       </div>
     </div>
   )

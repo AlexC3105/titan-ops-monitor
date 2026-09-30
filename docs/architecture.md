@@ -109,9 +109,14 @@ production builds. Both share the Worker's state-vector normaliser.
 
 ## Maps
 
-- **Interactive:** MapLibre GL with CARTO raster tiles, lazy-loaded as its own chunk.
+- **Basemap:** CARTO Dark Matter, configured once in `src/services/basemap.ts` from
+  `VITE_CARTO_BASEMAP_KEY` (a browser key protected by CARTO website restrictions). Without a key
+  neither renderer requests tiles and both show a configuration notice.
+- **Interactive:** MapLibre GL with CARTO's Dark Matter vector style, lazy-loaded as its own chunk.
+  Its container is positioned with an inline style because `maplibre-gl.css` sets
+  `.maplibregl-map { position: relative }`, which previously collapsed the map to 0 px height.
 - **Compatibility (default):** `StaticMap.tsx` computes Web Mercator tile coordinates itself and
-  positions `<img>` tiles and DOM markers, so a map renders on devices without WebGL.
+  positions CARTO raster `<img>` tiles and DOM markers, so a map renders on devices without WebGL.
 - The chosen mode is persisted and can be switched in Settings or on the map.
 
 ## PWA

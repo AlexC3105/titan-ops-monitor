@@ -31,6 +31,9 @@ This file separates what exists today from what is planned. Anything not listed 
 - Tropical systems layer: active NHC storms as markers in both map renderers, a detail panel
   (NHC classification, position, wind in kt, pressure in mb, motion, advisory, last update) and the
   official forecast track, forecast points and cone for the selected storm, with NHC's cone caveat.
+- CARTO Dark Matter basemap via one browser key (`VITE_CARTO_BASEMAP_KEY`) for both renderers:
+  raster tiles (compatibility) and the vector style (MapLibre); clear notice and no tile requests
+  when no key is set.
 - Installable PWA (manifest + Workbox app-shell service worker).
 - Settings and scenario history persisted to `localStorage`.
 - Heuristic scenario engine: 7 event types, deterministic output, confidence levels and explicit
@@ -52,7 +55,6 @@ This file separates what exists today from what is planned. Anything not listed 
 
 - Arrange production access with a flight-data provider (allowlisting or an issued key), then
   enable live flights through the existing Worker.
-- Replace the CARTO basemap, which now requires an API key.
 - Feed-health panel and auto-refresh (including the storm list).
 - Feed-health panel: real fetch time, latency, live / mock / stale status per feed.
 - Auto-refresh with per-feed intervals and backoff.
