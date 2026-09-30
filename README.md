@@ -1,5 +1,7 @@
 # TITAN — Operational Intelligence Monitor
 
+[![CI](https://github.com/AlexC3105/titan-ops-monitor/actions/workflows/ci.yml/badge.svg)](https://github.com/AlexC3105/titan-ops-monitor/actions/workflows/ci.yml)
+
 TITAN is a developing operational-awareness PWA for the Tampa Bay / Florida Gulf Coast region.
 It pulls live public data through typed adapters, shows it on a map, and offers a heuristic
 "what happens if…" scenario tool for planning discussions.
