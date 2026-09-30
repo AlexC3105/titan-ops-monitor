@@ -16,14 +16,15 @@ _Screenshots and a live demo link will be added with the first public deployment
 
 | Area | Implemented |
 | --- | --- |
-| Live data | National Weather Service forecast and active alerts; OpenSky flight positions (local dev only — see limitations) |
+| Live data | National Weather Service forecast and active alerts (direct from the browser); OpenSky flight positions in local development |
 | Adapter layer | `DataAdapter<T>` contract; every result carries `live` / `mock` status and a fetch time; timeouts fall back to clearly labelled mock data |
 | Maps | MapLibre GL (WebGL) and a hand-written GPU-free Web Mercator tile renderer, switchable at runtime |
 | App | React 18 + TypeScript, 8 routes, responsive shell with sidebar and mobile navigation |
 | PWA | Installable; Workbox service worker caches the app shell |
 | State | Region, layers, map mode and the last 50 scenario results persist in `localStorage` |
 | Scenarios | 7 event types; deterministic heuristic outputs with confidence levels, drivers and explicit data gaps |
-| Quality | 36 Vitest tests on recorded, sanitised API fixtures; CI runs typecheck, tests and build |
+| API Worker | Cloudflare Worker (`worker/`) exposing `GET /v1/flights?region=<id>`: allowlisted regions only, fixed upstream, request validation, CORS allowlist, upstream timeout, structured JSON errors, short success-only cache |
+| Quality | 86 Vitest tests (49 app, 37 Worker) on recorded, sanitised fixtures; CI runs typecheck, tests and build for both |
 
 ## Data sources
 
@@ -31,7 +32,7 @@ _Screenshots and a live demo link will be added with the first public deployment
 | --- | --- | --- |
 | NWS forecast (`api.weather.gov`) | live | points → gridpoint forecast, 7 s timeout |
 | NWS active alerts | live | GeoJSON, severity normalised, capped at 20 |
-| OpenSky Network | live in dev only | needs a same-origin proxy; production falls back to mock |
+| OpenSky Network | live in local dev; mock in production | dev: Vite proxy. Production: via the Worker, but see limitations |
 | Infrastructure, layers, regions | static sample data | hard-coded |
 
 Full catalog, including planned sources: [docs/data-sources.md](docs/data-sources.md).
@@ -45,7 +46,12 @@ UI routes (src/features/*)
 hooks (useWeather, useAlerts, useFlights)
    │  call adapters on region change
    ▼
-adapters (src/services/adapters/*)  ──►  public APIs (NWS, OpenSky via dev proxy)
+adapters (src/services/adapters/*)
+   ├──► NWS forecast + alerts            (direct, browser-safe CORS)
+   └──► flights
+          local dev:   Vite /osky proxy ──► OpenSky
+          production:  TITAN API Worker ──► OpenSky
+                       (region id → fixed bbox, validation, cache, timeout)
    │  normalise to typed AdapterResult<T>; on error/timeout → labelled mock
    ▼
 scenario engine (pure function)      stores (persisted to localStorage)
@@ -60,18 +66,26 @@ Requires Node 22+.
 
 ```bash
 npm ci
-npm run dev        # http://localhost:5173 (includes the OpenSky dev proxy)
+npm run dev        # http://localhost:5173 (flights via the local OpenSky dev proxy)
 npm run build      # typecheck + production build to dist/
 npm run preview    # serve the production build
 ```
 
-No API keys or environment variables are needed.
+No API keys or environment variables are needed. To run the API Worker locally:
+
+```bash
+npm --prefix worker ci
+npm run dev:worker                                   # http://localhost:8787
+VITE_TITAN_API_BASE=http://localhost:8787 npm run dev   # app → local Worker
+```
 
 ## Tests
 
 ```bash
-npm test           # Vitest, no network access required
+npm test                     # app tests (Vitest), no network access required
 npm run typecheck
+npm --prefix worker test     # Worker tests
+npm --prefix worker run check   # bundle + validate wrangler.toml, no deploy
 ```
 
 Adapter tests replay recorded NWS and OpenSky responses (`test/fixtures/`, identifiers
@@ -80,8 +94,13 @@ and status labelling. Scenario tests check determinism, bounds and framing — n
 
 ## Known limitations
 
-- **OpenSky only works on the dev server.** OpenSky does not allow cross-origin browser requests,
-  so a production proxy is required (planned).
+- **No live flights in production yet.** The Worker is deployed and working, but the public
+  flight-data providers evaluated (OpenSky, adsb.lol, airplanes.live) block or throttle requests
+  from shared cloud/serverless networks. Production therefore shows labelled mock flights until
+  provider access is arranged. Local development still gets live OpenSky data.
+- **Flight cache not yet measured in production.** Caching is implemented and covered by tests,
+  but no successful upstream response has reached the Worker yet, so there are no real cache
+  hit/miss measurements.
 - **Florida only.** Regions and NWS area codes are currently Florida-specific.
 - **No auto-refresh yet.** Feeds are fetched when the region changes.
 - **Scenario numbers are illustrative.** Templates and weights are hand-set and uncalibrated.

@@ -25,7 +25,8 @@ Every source is **mock-first**. A source is integrated only when a real adapter 
 - **OpenWeather** — global, needs API key. *inactive.*
 
 ### Transport
-- **OpenSky Network** — flight positions, free (rate-limited). **live in local development only** (`src/services/adapters/openSkyFlights.ts`, bbox query via the Vite dev proxy; production falls back to mock until the planned caching proxy exists).
+- **OpenSky Network** — flight positions, free (rate-limited). **live in local development** via the Vite dev proxy. Production calls the TITAN API Worker (`worker/`), which queries OpenSky server-side; OpenSky does not currently answer requests from Cloudflare, so production falls back to mock (`src/services/adapters/openSkyFlights.ts`).
+- **adsb.lol / airplanes.live** — evaluated as alternatives (2026-09). adsb.lol serves the needed fields but rate-limits Cloudflare origins; airplanes.live requires requesting API access. *Not integrated.*
 - **TomTom / HERE Traffic** — road speeds/incidents, key required. *inactive.*
 - **AISStream / MarineTraffic** — vessel AIS positions. *planned.*
 

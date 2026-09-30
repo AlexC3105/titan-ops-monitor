@@ -10,8 +10,8 @@ const GUARDRAILS = [
 ]
 
 const STATUS = [
-  ['Implemented', 'Live NWS forecast + alerts, OpenSky flights (dev proxy), maps, saved settings, heuristic scenarios.'],
-  ['Next', 'Server-side caching proxy, NHC storm data, feed-health panel, auto-refresh, public deployment.'],
+  ['Implemented', 'Live NWS forecast + alerts, OpenSky flights in local dev, API Worker with validation and caching, maps, saved settings, heuristic scenarios.'],
+  ['Next', 'Production flight-data access, NHC storm data, feed-health panel, auto-refresh, public deployment.'],
   ['Later', 'Additional regions and data sources. See ROADMAP.md in the repository.'],
 ]
 

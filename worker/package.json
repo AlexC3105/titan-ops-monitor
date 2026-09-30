@@ -1,0 +1,20 @@
+{
+  "name": "titan-api-worker",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "TITAN API Worker: allowlisted, cached server-side access to public data feeds.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "wrangler deploy --dry-run --outdir dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260930.1",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9",
+    "wrangler": "^4.144.0"
+  }
+}

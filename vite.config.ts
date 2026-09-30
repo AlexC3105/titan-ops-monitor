@@ -37,9 +37,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    // OpenSky restricts browser CORS to its own origin, so we proxy it in dev.
-    // Production has no proxy yet (planned), so the flights adapter degrades
-    // gracefully to mock outside the dev server.
+    // Local development only: OpenSky does not allow cross-origin browser
+    // requests, so the dev server forwards /osky to it. Production builds call
+    // the TITAN API Worker instead (see worker/ and src/services/adapters/openSkyFlights.ts).
     proxy: {
       '/osky': {
         target: 'https://opensky-network.org',
