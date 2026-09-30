@@ -1,0 +1,63 @@
+{
+  "_note": "Recorded from OpenSky /api/states/all (Tampa Bay bbox) on 2026-09-30. Aircraft identifiers replaced with fakes; third row derived with null position to exercise filtering.",
+  "time": 1790755696,
+  "states": [
+    [
+      "abc001",
+      "TEST101 ",
+      "United States",
+      1790755695,
+      1790755695,
+      -82.3811,
+      27.9648,
+      11887.2,
+      false,
+      224.54,
+      148.97,
+      0,
+      null,
+      12451.08,
+      "4045",
+      false,
+      0
+    ],
+    [
+      "abc002",
+      "        ",
+      "United States",
+      1790755695,
+      1790755695,
+      -82.7881,
+      27.9878,
+      457.2,
+      false,
+      22.17,
+      183.99,
+      0,
+      null,
+      464.82,
+      null,
+      false,
+      0
+    ],
+    [
+      "abc003",
+      "TEST303 ",
+      "United States",
+      1790755695,
+      1790755695,
+      null,
+      null,
+      457.2,
+      false,
+      22.17,
+      183.99,
+      0,
+      null,
+      464.82,
+      null,
+      false,
+      0
+    ]
+  ]
+}

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="TITAN">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="38%" r="70%">
+      <stop offset="0%" stop-color="#1c2b4a"/>
+      <stop offset="100%" stop-color="#070b14"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#g)"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#38bdf8" stroke-width="6" opacity="0.9"/>
+  <ellipse cx="256" cy="256" rx="150" ry="56" fill="none" stroke="#38bdf8" stroke-width="4" opacity="0.45"/>
+  <ellipse cx="256" cy="256" rx="64" ry="150" fill="none" stroke="#38bdf8" stroke-width="4" opacity="0.45"/>
+  <line x1="106" y1="256" x2="406" y2="256" stroke="#38bdf8" stroke-width="4" opacity="0.45"/>
+  <circle cx="256" cy="256" r="10" fill="#38bdf8"/>
+  <circle cx="334" cy="186" r="7" fill="#34d399"/>
+  <circle cx="196" cy="316" r="7" fill="#fbbf24"/>
+</svg>

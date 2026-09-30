@@ -1,0 +1,78 @@
+import type { DataLayer } from '@/types'
+
+// Phase 1 "living world" layers. Mock-first; each maps to a future real adapter
+// under src/services/adapters/.
+export const LAYERS: DataLayer[] = [
+  {
+    id: 'weather',
+    name: 'Weather',
+    category: 'environment',
+    status: 'mock',
+    enabledByDefault: true,
+    cadence: 'hourly',
+    description: 'Temperature, wind, precipitation, and active hazard advisories.',
+  },
+  {
+    id: 'traffic',
+    name: 'Traffic',
+    category: 'transport',
+    status: 'mock',
+    enabledByDefault: true,
+    cadence: 'minutes',
+    description: 'Road speeds, congestion, and major-corridor incidents.',
+  },
+  {
+    id: 'flights',
+    name: 'Flights',
+    category: 'transport',
+    status: 'live',
+    enabledByDefault: false,
+    cadence: 'realtime',
+    description: 'Live aircraft positions (OpenSky). Toggle on to plot tracked flights.',
+  },
+  {
+    id: 'ships',
+    name: 'Ships',
+    category: 'transport',
+    status: 'mock',
+    enabledByDefault: false,
+    cadence: 'minutes',
+    description: 'Vessel positions and port queue depth (AIS-style).',
+  },
+  {
+    id: 'population',
+    name: 'Population density',
+    category: 'population',
+    status: 'mock',
+    enabledByDefault: true,
+    cadence: 'monthly',
+    description: 'Group-level density grid. No individuals are modeled.',
+  },
+  {
+    id: 'utilities',
+    name: 'Utility demand',
+    category: 'utilities',
+    status: 'mock',
+    enabledByDefault: false,
+    cadence: 'hourly',
+    description: 'Electric / water demand and grid load proxies.',
+  },
+  {
+    id: 'infrastructure',
+    name: 'Infrastructure',
+    category: 'infrastructure',
+    status: 'mock',
+    enabledByDefault: true,
+    cadence: 'historical',
+    description: 'Bridges, ports, hospitals, shelters, and critical facilities.',
+  },
+  {
+    id: 'events',
+    name: 'News / events',
+    category: 'events',
+    status: 'mock',
+    enabledByDefault: false,
+    cadence: 'realtime',
+    description: 'Geolocated public events and advisories (group-level signals only).',
+  },
+]

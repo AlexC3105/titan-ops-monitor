@@ -1,0 +1,31 @@
+{
+  "_note": "Recorded from api.weather.gov gridpoint forecast on 2026-09-30; first 2 periods, trimmed.",
+  "properties": {
+    "periods": [
+      {
+        "number": 1,
+        "name": "Overnight",
+        "startTime": "2026-09-30T03:00:00-04:00",
+        "endTime": "2026-09-30T06:00:00-04:00",
+        "isDaytime": false,
+        "temperature": 72,
+        "temperatureUnit": "F",
+        "windSpeed": "2 mph",
+        "windDirection": "ESE",
+        "shortForecast": "Mostly Cloudy"
+      },
+      {
+        "number": 2,
+        "name": "Wednesday",
+        "startTime": "2026-09-30T06:00:00-04:00",
+        "endTime": "2026-09-30T18:00:00-04:00",
+        "isDaytime": true,
+        "temperature": 89,
+        "temperatureUnit": "F",
+        "windSpeed": "2 to 7 mph",
+        "windDirection": "ESE",
+        "shortForecast": "Partly Sunny then Scattered Showers And Thunderstorms"
+      }
+    ]
+  }
+}

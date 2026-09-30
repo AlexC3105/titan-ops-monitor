@@ -1,0 +1,62 @@
+{
+  "_note": "Recorded from api.weather.gov/alerts/active?area=FL on 2026-09-30; 4 features, geometry dropped, properties trimmed.",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.15b9d911bdcf0610d7d9af736cbd7790b54dbdb0.001.1",
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "urn:oid:2.49.0.1.840.0.15b9d911bdcf0610d7d9af736cbd7790b54dbdb0.001.1",
+        "event": "Coastal Flood Advisory",
+        "severity": "Minor",
+        "urgency": "Expected",
+        "headline": "Coastal Flood Advisory issued September 30 at 3:55AM EDT until September 30 at 5:00PM EDT by NWS Key West FL",
+        "areaDesc": "Monroe Upper Keys; Monroe Middle Keys; Monroe Lower Keys",
+        "expires": "2026-09-30T12:00:00-04:00"
+      }
+    },
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.cb9b765e3aa1f1e4d6e941ca6c664487c361730a.001.1",
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "urn:oid:2.49.0.1.840.0.cb9b765e3aa1f1e4d6e941ca6c664487c361730a.001.1",
+        "event": "Special Weather Statement",
+        "severity": "Moderate",
+        "urgency": "Expected",
+        "headline": "Special Weather Statement issued September 30 at 3:43AM EDT by NWS Jacksonville FL",
+        "areaDesc": "Suwannee; Baker; Inland Nassau; Eastern Hamilton; Western Hamilton; Northern Columbia; Southeastern Columbia; Western Duval; Southwestern Columbia; Coffee; Jeff Davis; Bacon; Appling; Wayne; Atkinson; Pierce; Brantley; Inland Glynn; Coastal Glynn; Echols; Clinch; Inland Camden; Coastal Camden; Northern Ware; Northeastern Charlton; Southern Ware; Western Charlton",
+        "expires": "2026-09-30T08:30:00-04:00"
+      }
+    },
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.8871c44fbc07c5d555a0f11dfe2876862aefe2e2.001.1",
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "urn:oid:2.49.0.1.840.0.8871c44fbc07c5d555a0f11dfe2876862aefe2e2.001.1",
+        "event": "Rip Current Statement",
+        "severity": "Moderate",
+        "urgency": "Expected",
+        "headline": "Rip Current Statement issued September 29 at 11:54PM CDT until October 4 at 12:00AM CDT by NWS Mobile AL",
+        "areaDesc": "Mobile Coastal; Baldwin Coastal; Escambia Coastal; Santa Rosa Coastal; Okaloosa Coastal",
+        "expires": "2026-09-30T08:00:00-05:00"
+      }
+    },
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.eef71f915123af5cd1ee1a6c65cf3091c83f52c4.001.1",
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "urn:oid:2.49.0.1.840.0.eef71f915123af5cd1ee1a6c65cf3091c83f52c4.001.1",
+        "event": "Flood Warning",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "headline": "Flood Warning issued September 29 at 8:55PM EDT by NWS Melbourne FL",
+        "areaDesc": "Lake, FL; Volusia, FL",
+        "expires": "2026-09-30T11:00:00-04:00"
+      }
+    }
+  ]
+}

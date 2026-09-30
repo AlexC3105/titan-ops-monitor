@@ -1,0 +1,12 @@
+{
+  "_note": "Recorded from api.weather.gov/points on 2026-09-30; trimmed to fields the adapter reads.",
+  "properties": {
+    "forecast": "https://api.weather.gov/gridpoints/TBW/71,98/forecast",
+    "relativeLocation": {
+      "properties": {
+        "city": "Tampa",
+        "state": "FL"
+      }
+    }
+  }
+}
